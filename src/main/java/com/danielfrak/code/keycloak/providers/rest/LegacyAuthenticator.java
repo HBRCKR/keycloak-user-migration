@@ -20,10 +20,10 @@ import javax.ws.rs.core.Response;
 public class LegacyAuthenticator extends UsernamePasswordForm {
     private static final Logger logger = Logger.getLogger(LegacyAuthenticator.class);
 
-    private Pbkdf2PasswordHashProvider getPasswordHashProvider(AuthenticationFlowContext context) {
+    private PasswordHashProvider getPasswordHashProvider(AuthenticationFlowContext context) {
         KeycloakSession session = context.getSession();
         return session.getKeycloakSessionFactory()
-                .getProviderFactory(Pbkdf2PasswordHashProvider.class, Pbkdf2PasswordHashProviderFactory.ID)
+                .getProviderFactory(PasswordHashProvider.class, Pbkdf2PasswordHashProviderFactory.ID)
                 .create(session);
     }
 
