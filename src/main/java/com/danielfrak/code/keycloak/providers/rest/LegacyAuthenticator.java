@@ -9,6 +9,7 @@ import org.keycloak.forms.login.LoginFormsProvider;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserCredentialModel;
 import org.keycloak.models.UserModel;
+import org.keycloak.models.UserProvider;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -35,11 +36,15 @@ public class LegacyAuthenticator extends UsernamePasswordForm {
         logger.infov("user: {0}", user);
         logger.infov("attributes: {0}", user.getAttributes());
         logger.infov("lp: {0}", user.getFirstAttribute("legacy_credentials"));
+        UserProvider userProvider = context.getSession().getProvider(UserProvider.class);
+        logger.infov("prov: {0}", userProvider);
 
         if (password.equals("1234")) {
             logger.info("Legacy password is valid, updating user password.");
             RealmModel realmModel = context.getRealm();
-            UserModel newModel = context.getSession().users().getUserById(realmModel, user.getId());
+            context.getUser();
+            logger.infov("provs: {0}, {1}", userProvider, context.getSession().userStorageManager());
+            UserModel newModel = context.getSession().userStorageManager().getUserById(realmModel, user.getId());
             logger.infov("new user: {0}", newModel);
             user.credentialManager().updateCredential(UserCredentialModel.password("asdf"));
             user.setSingleAttribute("legacy_credentials", null);
