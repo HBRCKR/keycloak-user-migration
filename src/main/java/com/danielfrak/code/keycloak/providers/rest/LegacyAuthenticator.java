@@ -47,8 +47,6 @@ public class LegacyAuthenticator extends UsernamePasswordForm {
             newModel.setSingleAttribute("legacy_credentials", null);
             newModel.removeAttribute("legacy_credentials");
             logger.infov("after - attributes: {0}", user.getAttributes());
-
-            user.notify();
             return true;
         }
 
