@@ -1,6 +1,6 @@
 ARG KEYCLOAK_IMAGE=quay.io/keycloak/keycloak:21.0.2
 
-FROM maven_builder as builder
+FROM maven:3.9.1-amazoncorretto-17 as builder
 COPY pom.xml /tmp/
 COPY src /tmp/src
 WORKDIR /tmp/
