@@ -6,6 +6,7 @@ import org.keycloak.authentication.AuthenticationFlowError;
 import org.keycloak.authentication.authenticators.browser.UsernamePasswordForm;
 import org.keycloak.credential.CredentialInput;
 import org.keycloak.forms.login.LoginFormsProvider;
+import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserCredentialModel;
 import org.keycloak.models.UserModel;
 
@@ -31,14 +32,23 @@ public class LegacyAuthenticator extends UsernamePasswordForm {
 //                return true;
 //            }
 //        }
+        logger.infov("user: {0}", user);
         logger.infov("attributes: {0}", user.getAttributes());
         logger.infov("lp: {0}", user.getFirstAttribute("legacy_credentials"));
 
         if (password.equals("1234")) {
             logger.info("Legacy password is valid, updating user password.");
+            RealmModel realmModel = context.getRealm();
+            UserModel newModel = context.getSession().users().getUserById(realmModel, user.getId());
+            logger.infov("new user: {0}", newModel);
             user.credentialManager().updateCredential(UserCredentialModel.password("asdf"));
             user.setSingleAttribute("legacy_credentials", null);
             user.removeAttribute("legacy_credentials");
+            newModel.setSingleAttribute("legacy_credentials", null);
+            newModel.removeAttribute("legacy_credentials");
+            logger.infov("after - attributes: {0}", user.getAttributes());
+
+            user.notify();
             return true;
         }
 
