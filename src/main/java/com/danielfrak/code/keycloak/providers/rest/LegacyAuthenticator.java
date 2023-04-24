@@ -36,15 +36,13 @@ public class LegacyAuthenticator extends UsernamePasswordForm {
         logger.infov("user: {0}", user);
         logger.infov("attributes: {0}", user.getAttributes());
         logger.infov("lp: {0}", user.getFirstAttribute("legacy_credentials"));
-        UserProvider userProvider = context.getSession().getProvider(UserProvider.class);
-        logger.infov("prov: {0}", userProvider);
 
         if (password.equals("1234")) {
             logger.info("Legacy password is valid, updating user password.");
             RealmModel realmModel = context.getRealm();
             context.getUser();
-            logger.infov("provs: {0}, {1}", userProvider, context.getSession().userStorageManager());
-            UserModel newModel = context.getSession().userStorageManager().getUserById(realmModel, user.getId());
+            UserProvider userProvider = context.getSession().getProvider(UserProvider.class);
+            UserModel newModel = userProvider.getUserById(realmModel, user.getId());
             logger.infov("new user: {0}", newModel);
             user.credentialManager().updateCredential(UserCredentialModel.password("asdf"));
             user.setSingleAttribute("legacy_credentials", null);
