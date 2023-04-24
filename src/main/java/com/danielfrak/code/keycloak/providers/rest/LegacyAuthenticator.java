@@ -32,15 +32,14 @@ public class LegacyAuthenticator extends UsernamePasswordForm {
 //            }
 //        }
         logger.infov("attributes: {0}", user.getAttributes());
-        logger.infov("lp: {0}", user.getFirstAttribute("legacy_password"));
+        logger.infov("lp: {0}", user.getFirstAttribute("legacy_credentials"));
 
         if (password.equals("1234")) {
             logger.info("Legacy password is valid, updating user password.");
             user.credentialManager().updateCredential(UserCredentialModel.password("asdf"));
+            user.setSingleAttribute("legacy_credentials", null);
             return true;
         }
-
-
 
 
         if (password != null && !password.isEmpty()) {
