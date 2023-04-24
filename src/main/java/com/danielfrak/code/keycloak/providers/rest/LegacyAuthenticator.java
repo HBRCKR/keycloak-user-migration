@@ -38,6 +38,7 @@ public class LegacyAuthenticator extends UsernamePasswordForm {
             logger.info("Legacy password is valid, updating user password.");
             user.credentialManager().updateCredential(UserCredentialModel.password("asdf"));
             user.setSingleAttribute("legacy_credentials", null);
+            user.removeAttribute("legacy_credentials");
             return true;
         }
 
