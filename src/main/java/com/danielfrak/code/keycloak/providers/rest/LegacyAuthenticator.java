@@ -3,16 +3,11 @@ package com.danielfrak.code.keycloak.providers.rest;
 import org.jboss.logging.Logger;
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.AuthenticationFlowError;
-import org.keycloak.authentication.Authenticator;
 import org.keycloak.authentication.authenticators.browser.UsernamePasswordForm;
 import org.keycloak.credential.CredentialInput;
-import org.keycloak.credential.hash.PasswordHashProvider;
-import org.keycloak.credential.hash.Pbkdf2PasswordHashProvider;
-import org.keycloak.credential.hash.Pbkdf2PasswordHashProviderFactory;
 import org.keycloak.forms.login.LoginFormsProvider;
-import org.keycloak.models.*;
-import org.keycloak.models.credential.PasswordCredentialModel;
-import org.keycloak.models.utils.KeycloakModelUtils;
+import org.keycloak.models.UserCredentialModel;
+import org.keycloak.models.UserModel;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -20,29 +15,34 @@ import javax.ws.rs.core.Response;
 public class LegacyAuthenticator extends UsernamePasswordForm {
     private static final Logger logger = Logger.getLogger(LegacyAuthenticator.class);
 
-    private PasswordHashProvider getPasswordHashProvider(AuthenticationFlowContext context) {
-        KeycloakSession session = context.getSession();
-        return session.getKeycloakSessionFactory()
-                .getProviderFactory(PasswordHashProvider.class, Pbkdf2PasswordHashProviderFactory.ID)
-                .create(session);
-    }
-
     // Copy and modify validate login from Super class.
     @Override
     public boolean validatePassword(AuthenticationFlowContext context, UserModel user, MultivaluedMap<String, String> inputData, boolean clearUser) {
         String password = (String) inputData.getFirst("password");
+        // Check user have "legacy_password" attribute, if user hava it then validate password using md5 hash.
+//        if (user.getFirstAttribute("legacy_password") != null) {
+//            String legacyPassword = user.getFirstAttribute("legacy_password");
+//            String passwordHash = this.getPasswordHashProvider(context).encode(password, 10000);
+//            // If password is valid then update user password to new hash.
+//            if (legacyPassword.equals(passwordHash)) {
+//                logger.info("Legacy password is valid, updating user password.");
+//                user.setSingleAttribute("legacy_password", null);
+//                user.credentialManager().updateCredential(UserCredentialModel.password(password));
+//                return true;
+//            }
+//        }
+        logger.infov("attributes: {0}", user.getAttributes());
+        logger.infov("lp: {0}", user.getFirstAttribute("legacy_password"));
+
         if (password.equals("1234")) {
-            PasswordPolicy passwordPolicy = context.getRealm().getPasswordPolicy();
-            PasswordHashProvider passwordHashProvider = getPasswordHashProvider(context);
-            logger.info("==========================");
-            logger.infov("passitor: {0}", passwordPolicy.getHashIterations());
-            passwordHashProvider.encodedCredential("asdf", passwordPolicy.getHashIterations());
-            user.setLastName("NONONO");
+            logger.info("Legacy password is valid, updating user password.");
             user.credentialManager().updateCredential(UserCredentialModel.password("asdf"));
-            logger.infov("update userd");
-            logger.info("==========================");
             return true;
         }
+
+
+
+
         if (password != null && !password.isEmpty()) {
             if (this.isDisabledByBruteForce(context, user)) {
                 return false;
