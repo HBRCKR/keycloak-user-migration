@@ -1,5 +1,6 @@
 package com.danielfrak.code.keycloak.providers.rest;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.jboss.logging.Logger;
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.AuthenticationFlowError;
@@ -21,31 +22,23 @@ public class LegacyAuthenticator extends UsernamePasswordForm {
     @Override
     public boolean validatePassword(AuthenticationFlowContext context, UserModel user, MultivaluedMap<String, String> inputData, boolean clearUser) {
         String password = (String) inputData.getFirst("password");
-        // Check user have "legacy_password" attribute, if user hava it then validate password using md5 hash.
-//        if (user.getFirstAttribute("legacy_password") != null) {
-//            String legacyPassword = user.getFirstAttribute("legacy_password");
-//            String passwordHash = this.getPasswordHashProvider(context).encode(password, 10000);
-//            // If password is valid then update user password to new hash.
-//            if (legacyPassword.equals(passwordHash)) {
-//                logger.info("Legacy password is valid, updating user password.");
-//                user.setSingleAttribute("legacy_password", null);
-//                user.credentialManager().updateCredential(UserCredentialModel.password(password));
-//                return true;
-//            }
-//        }
         logger.infov("lp: {0}", user.getFirstAttribute("legacy_credentials"));
+        String legacyCredentials = user.getFirstAttribute("legacy_credentials");
+        boolean isLegacyCredentials = Boolean.parseBoolean(legacyCredentials);
+        if (isLegacyCredentials) {
+            logger.infov("User({0}) is legacy user. Try legacy process and change password.", user.getUsername());
+            String legacyPasswordHash = user.getFirstAttribute("legacy_password_hash");
+            String hash = DigestUtils.md5Hex(password);
+            if (!hash.equals(legacyPasswordHash)) {
+                return false;
+            }
 
-        if (password.equals("1234")) {
-            logger.info("Legacy password is valid, updating user password.");
             RealmModel realmModel = context.getRealm();
             UserProvider userProvider = context.getSession().getProvider(UserProvider.class);
             UserModel newModel = userProvider.getUserById(realmModel, user.getId());
-            logger.infov("new user: {0}", newModel);
-            logger.infov("attributes: {0}", newModel.getAttributes());
             newModel.removeAttribute("legacy_credentials");
-            logger.infov("after - attributes: {0}", newModel.getAttributes());
-
-            user.credentialManager().updateCredential(UserCredentialModel.password("asdf"));
+            newModel.removeAttribute("legacy_password_hash");
+            user.credentialManager().updateCredential(UserCredentialModel.password(password));
             return true;
         }
         return false;
