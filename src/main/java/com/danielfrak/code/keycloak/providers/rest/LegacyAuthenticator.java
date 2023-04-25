@@ -22,23 +22,32 @@ public class LegacyAuthenticator extends UsernamePasswordForm {
     @Override
     public boolean validatePassword(AuthenticationFlowContext context, UserModel user, MultivaluedMap<String, String> inputData, boolean clearUser) {
         String password = (String) inputData.getFirst("password");
-        logger.infov("lp: {0}", user.getFirstAttribute("legacy_credentials"));
         String legacyCredentials = user.getFirstAttribute("legacy_credentials");
         boolean isLegacyCredentials = Boolean.parseBoolean(legacyCredentials);
         if (isLegacyCredentials) {
-            logger.infov("User({0}) is legacy user. Try legacy process and change password.", user.getUsername());
+            logger.infov("User({0}) is legacy user. Try legacy process", user.getUsername());
             String legacyPasswordHash = user.getFirstAttribute("legacy_password_hash");
             String hash = DigestUtils.md5Hex(password);
             if (!hash.equals(legacyPasswordHash)) {
                 return false;
             }
 
+            logger.infov("User({0}) success to validate legacy process, Try to change password and remove legacy attribute", user.getUsername());
+
+            // Find UserProvider to get UserModel, 'user' argument is just CachedUserModel, It can't be updated.
+            // So, need to get UserModel(not cached) from UserProvider.
             RealmModel realmModel = context.getRealm();
             UserProvider userProvider = context.getSession().getProvider(UserProvider.class);
             UserModel newModel = userProvider.getUserById(realmModel, user.getId());
+
+            // Change user password newly. it will be stored as keycloak provided hash(pbkdf2).
+            newModel.credentialManager().updateCredential(UserCredentialModel.password(password));
+
+            // Remove legacy attributes when after first legacy login process.
             newModel.removeAttribute("legacy_credentials");
             newModel.removeAttribute("legacy_password_hash");
-            user.credentialManager().updateCredential(UserCredentialModel.password(password));
+
+            logger.infov("User({0}) success to change password and remove attributes", user.getUsername());
             return true;
         }
         return false;
