@@ -42,7 +42,6 @@ public class LegacyAuthenticator extends UsernamePasswordForm {
             UserModel newModel = userProvider.getUserById(realmModel, user.getId());
             logger.infov("new user: {0}", newModel);
             logger.infov("attributes: {0}", newModel.getAttributes());
-            newModel.setSingleAttribute("legacy_credentials", null);
             newModel.removeAttribute("legacy_credentials");
             logger.infov("after - attributes: {0}", newModel.getAttributes());
 

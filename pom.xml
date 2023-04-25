@@ -70,6 +70,15 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.keycloak/keycloak-model-jpa -->
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-model-jpa</artifactId>
+            <version>${keycloak.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+
         <!-- https://mvnrepository.com/artifact/org.jboss.logging/jboss-logging -->
         <dependency>
             <groupId>org.jboss.logging</groupId>
