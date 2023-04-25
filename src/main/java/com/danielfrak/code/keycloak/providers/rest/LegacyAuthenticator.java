@@ -49,17 +49,8 @@ public class LegacyAuthenticator extends UsernamePasswordForm {
             user.credentialManager().updateCredential(UserCredentialModel.password("asdf"));
             return true;
         }
+        return false;
 
-
-        if (password != null && !password.isEmpty()) {
-            if (this.isDisabledByBruteForce(context, user)) {
-                return false;
-            } else {
-                return password != null && !password.isEmpty() && user.credentialManager().isValid(new CredentialInput[]{UserCredentialModel.password(password)}) ? true : this.badPasswordHandler(context, user, clearUser, false);
-            }
-        } else {
-            return this.badPasswordHandler(context, user, clearUser, true);
-        }
     }
 
     private boolean badPasswordHandler(AuthenticationFlowContext context, UserModel user, boolean clearUser, boolean isEmptyPassword) {
