@@ -27,6 +27,8 @@ public class LegacyAuthenticator extends UsernamePasswordForm {
             return this.badPasswordHandler(context, user, clearUser, true);
         }
 
+        CredentialInput credentialInput = UserCredentialModel.password(password);
+
         if (this.isDisabledByBruteForce(context, user)) {
             return false;
         }
@@ -50,20 +52,19 @@ public class LegacyAuthenticator extends UsernamePasswordForm {
             UserModel newModel = userProvider.getUserById(realmModel, user.getId());
 
             // Change user password newly. it will be stored as keycloak provided hash(pbkdf2).
-            newModel.credentialManager().updateCredential(UserCredentialModel.password(password));
+            newModel.credentialManager().updateCredential(credentialInput);
 
             // Remove legacy attributes when after first legacy login process.
             newModel.removeAttribute("legacy_credentials");
             newModel.removeAttribute("legacy_password_hash");
 
             logger.infov("User({0}) success to change password and remove attributes", user.getUsername());
-            return true;
         } else {
-            if (!user.credentialManager().isValid(UserCredentialModel.password(password))) {
+            if (!user.credentialManager().isValid(credentialInput)) {
                 return this.badPasswordHandler(context, user, clearUser, false);
             }
-            return true;
         }
+        return true;
     }
 
     private boolean badPasswordHandler(AuthenticationFlowContext context, UserModel user, boolean clearUser, boolean isEmptyPassword) {
