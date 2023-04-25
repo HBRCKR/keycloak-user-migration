@@ -21,7 +21,16 @@ public class LegacyAuthenticator extends UsernamePasswordForm {
     // Copy and modify validate login from Super class.
     @Override
     public boolean validatePassword(AuthenticationFlowContext context, UserModel user, MultivaluedMap<String, String> inputData, boolean clearUser) {
-        String password = (String) inputData.getFirst("password");
+        String password = inputData.getFirst("password");
+
+        if (password == null || password.isEmpty()) {
+            return this.badPasswordHandler(context, user, clearUser, true);
+        }
+
+        if (this.isDisabledByBruteForce(context, user)) {
+            return false;
+        }
+
         String legacyCredentials = user.getFirstAttribute("legacy_credentials");
         boolean isLegacyCredentials = Boolean.parseBoolean(legacyCredentials);
         if (isLegacyCredentials) {
@@ -49,9 +58,12 @@ public class LegacyAuthenticator extends UsernamePasswordForm {
 
             logger.infov("User({0}) success to change password and remove attributes", user.getUsername());
             return true;
+        } else {
+            if (!user.credentialManager().isValid(UserCredentialModel.password(password))) {
+                return this.badPasswordHandler(context, user, clearUser, false);
+            }
+            return true;
         }
-        return false;
-
     }
 
     private boolean badPasswordHandler(AuthenticationFlowContext context, UserModel user, boolean clearUser, boolean isEmptyPassword) {
