@@ -11,6 +11,7 @@ import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserCredentialModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.models.UserProvider;
+import org.keycloak.models.cache.infinispan.UserAdapter;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -57,6 +58,11 @@ public class LegacyAuthenticator extends UsernamePasswordForm {
             // Remove legacy attributes when after first legacy login process.
             newModel.removeAttribute("legacy_credentials");
             newModel.removeAttribute("legacy_password_hash");
+
+            // If user cached, need to update cache.
+            if (user instanceof UserAdapter) {
+                ((UserAdapter) user).getDelegateForUpdate();
+            }
 
             logger.infov("User({0}) success to change password and remove attributes", user.getUsername());
         } else {
